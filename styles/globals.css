@@ -60,25 +60,7 @@ body {
   padding: 8px;
 }
 
-.dropdown-content {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: #0096c7;
-  border-radius: 4px;
-  overflow: hidden;
-}
 
-.dropdown-content a {
-  display: block;
-  padding: 8px 12px;
-  color: white;
-  text-decoration: none;
-}
-
-.dropdown-content a:hover {
-  background: #0077b6;
-}
 
 /* Mobile responsive */
 @media (max-width: 768px) {
@@ -102,5 +84,60 @@ body {
 
   .dropdown-content {
     position: static;
+  }
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  position: absolute;
+  background-color: white;
+  min-width: 100px;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+  z-index: 9999; /* <-- Lo importante para que esté por encima */
+}
+
+.dropdown-content a {
+  display: block;
+  padding: 4px 8px;
+  color: black;
+  text-decoration: none;
+}
+
+.dropdown-content a:hover {
+  background-color: #f0f0f0;
+}
+
+.dropbtn {
+  background: none;
+  border: 12px;
+  cursor: pointer;
+  padding: 1px;
+  font-size: 14px;
+}
+
+.dropdown-content {
+  position: absolute;
+  background-color: white;
+  min-width: 160px; /* igual que en JS */
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+  z-index: 9999;
+  left: 0;
+  right: auto;
+}
+
+.dropdown-content.left {
+  left: auto;
+  right: 0;
+}
+
+/* Móviles */
+@media (max-width: 768px) {
+  .dropdown-content {
+    position: static !important;
+    box-shadow: none;
+    min-width: auto;
   }
 }

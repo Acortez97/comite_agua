@@ -127,13 +127,13 @@ export default function Navbar() {
                 dropdownDirection.usuarios === "left" ? "left" : ""
               }`}
             >
-              <Link href="/Ver_usuarios" onClick={closeAll}>
+              <Link href="/Usuarios/Ver_usuarios" onClick={closeAll}>
                 Ver Usuarios
               </Link>
-              <Link href="/Registro_usuarios" onClick={closeAll}>
+              <Link href="/Usuarios/Registro_usuarios" onClick={closeAll}>
                 Registrar Usuarios
               </Link>
-              <Link href="/Editar_usuarios" onClick={closeAll}>
+              <Link href="/Usuarios/Editar_usuarios" onClick={closeAll}>
                 Editar Usuarios
               </Link>
             </div>
@@ -154,13 +154,13 @@ export default function Navbar() {
                 dropdownDirection.contratos === "left" ? "left" : ""
               }`}
             >
-              <Link href="/Ver_contratos" onClick={closeAll}>
+              <Link href="/Contratos/Ver_contratos" onClick={closeAll}>
                 Ver Contratos
               </Link>
-              <Link href="/Registro_contratos" onClick={closeAll}>
+              <Link href="/Contratos/Registro_contratos" onClick={closeAll}>
                 Registrar Contratos
               </Link>
-              <Link href="/Editar_contratos" onClick={closeAll}>
+              <Link href="/Contratos/Editar_contratos" onClick={closeAll}>
                 Editar Contratos
               </Link>
             </div>
@@ -178,13 +178,13 @@ export default function Navbar() {
                 dropdownDirection.pagos === "left" ? "left" : ""
               }`}
             >
-              <Link href="/Ver_pagos" onClick={closeAll}>
+              <Link href="/Pagos/Ver_pagos" onClick={closeAll}>
                 Ver Pagos
               </Link>
-              <Link href="/Registro_pagos" onClick={closeAll}>
+              <Link href="/Pagos/Registro_pagos" onClick={closeAll}>
                 Registrar Pagos
               </Link>
-              <Link href="/Editar_pagos" onClick={closeAll}>
+              <Link href="/Pagos/Editar_pagos" onClick={closeAll}>
                 Registrar Aportaciones extras
               </Link>
             </div>

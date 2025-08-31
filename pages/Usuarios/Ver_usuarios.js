@@ -147,6 +147,8 @@ const headCells = [
   { id: 'Apellido_mat', numeric: false, disablePadding: false, label: 'Apellido Materno' },
   { id: 'num_celular', numeric: false, disablePadding: false, label: 'Celular' },
   { id: 'correo', numeric: false, disablePadding: false, label: 'Correo' },
+  { id: 'domicilio', numeric: false, disablePadding: false, label: 'Domicilio' },
+
 ];
 
 function EnhancedTableHead(props) {
@@ -253,6 +255,31 @@ export default function Ver_usuarios() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState([]);
 
+
+  // Al inicio del componente:
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  // Lógica para filtrar según búsqueda
+  const filteredRows = rows.filter((row) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      row.Nombre?.toLowerCase().includes(query) ||
+      row.Apellido_pat?.toLowerCase().includes(query) ||
+      row.Apellido_mat?.toLowerCase().includes(query) ||
+      row.num_celular?.toLowerCase().includes(query) ||
+      row.correo?.toLowerCase().includes(query) ||
+      row.domicilio?.toLowerCase().includes(query)
+    );
+  });
+
+  const visibleRows = React.useMemo(() =>
+    [...filteredRows]
+      .sort(getComparator(order, orderBy))
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [filteredRows, order, orderBy, page, rowsPerPage]
+  );
+
+
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -292,7 +319,7 @@ export default function Ver_usuarios() {
       body: JSON.stringify({
         select: '*',
         table: 'usuarios',
-      }),
+      })
     })
       .then((res) => res.json())
       .then((data) => {
@@ -303,12 +330,6 @@ export default function Ver_usuarios() {
       .catch((err) => console.error('Error al obtener usuarios:', err));
   }, []);
 
-  const visibleRows = React.useMemo(() =>
-    [...rows]
-      .sort(getComparator(order, orderBy))
-      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [rows, order, orderBy, page, rowsPerPage]
-  );
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - rows.length);
 
@@ -316,9 +337,25 @@ export default function Ver_usuarios() {
     <Box sx={{ width: '95%', margin: 'auto' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Usuarios</label>
-            </div>
+          <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Usuarios</label>
+        </div>
         <EnhancedTableToolbar numSelected={selected.length} />
+        <div style={{ padding: '0 16px 16px', textAlign: 'right' }}>
+          <input
+            type="text"
+            placeholder="Buscar usuario..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              width: '100%',
+              maxWidth: '300px'
+            }}
+          />
+        </div>
+
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
@@ -361,6 +398,7 @@ export default function Ver_usuarios() {
                     <TableCell>{row.Apellido_mat}</TableCell>
                     <TableCell>{row.num_celular}</TableCell>
                     <TableCell>{row.correo}</TableCell>
+                    <TableCell>{row.domicilio}</TableCell>
                   </TableRow>
                 );
               })}

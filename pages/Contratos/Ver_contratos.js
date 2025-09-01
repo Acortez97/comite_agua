@@ -146,7 +146,7 @@ export default function Ver_usuarios() {
       row.Contratante?.toLowerCase().includes(query) ||
       row.num_contrato?.toLowerCase().includes(query) ||
       row.Fecha_contrato?.toLowerCase().includes(query) ||
-      row.respon_comite?.toLowerCase().includes(query) 
+      row.respon_comite?.toLowerCase().includes(query)
     );
   });
 
@@ -195,7 +195,7 @@ export default function Ver_usuarios() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        select: 'c.num_contrato,c.Fecha_contrato,c.respon_comite, CONCAT_WS(" ",u.Nombre, " ", u.Apellido_pat, " ", u.Apellido_mat) AS Contratante',
+        select: 'c.num_contrato, DATE_FORMAT(c.Fecha_contrato, "%Y-%m-%d %H:%i:%s") AS Fecha_contrato,c.respon_comite, CONCAT_WS(" ",u.Nombre, " ", u.Apellido_pat, " ", u.Apellido_mat) AS Contratante',
         table: 'contratos c LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario',
       })
     })
@@ -208,7 +208,26 @@ export default function Ver_usuarios() {
       .catch((err) => console.error('Error al obtener usuarios:', err));
   }, []);
 
+  function formatearFechaHora(fechaStr) {
+    if (!fechaStr) return '';
 
+    // Reemplazar espacio por 'T' para parsear como fecha ISO local
+    const fechaLocal = new Date(fechaStr.replace(' ', 'T'));
+
+    const pad = (n) => n.toString().padStart(2, '0');
+
+    const año = fechaLocal.getFullYear();
+    const mes = pad(fechaLocal.getMonth() + 1);
+    const dia = pad(fechaLocal.getDate());
+    const hora = pad(fechaLocal.getHours());
+    const minuto = pad(fechaLocal.getMinutes());
+    const segundo = pad(fechaLocal.getSeconds());
+
+    return `${año}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
+  }
+
+
+  console.log("la fecha: ", rows.Fecha_contrato)
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - rows.length);
 
@@ -274,7 +293,17 @@ export default function Ver_usuarios() {
                     </TableCell>
 
                     <TableCell>{row.num_contrato}</TableCell>
-                    <TableCell>{row.Fecha_contrato}</TableCell>
+                    <TableCell> {row.Fecha_contrato
+                      ? new Date(row.Fecha_contrato.replace(' ', 'T')).toLocaleString('es-MX', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour12: false
+                      })
+                      : ''}</TableCell>
                     <TableCell>{row.respon_comite}</TableCell>
                   </TableRow>
                 );

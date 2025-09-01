@@ -24,10 +24,13 @@ function getComparator(order, orderBy) {
 }
 
 const headCells = [
-  { id: 'id_usuario', numeric: false, disablePadding: true, label: 'Nombre' },
-  { id: 'num_contrato', numeric: false, disablePadding: false, label: 'Contrato' },
-  { id: 'Fecha_contrato', numeric: false, disablePadding: false, label: 'Fecha de contrato' },
-  { id: 'respon_comite', numeric: false, disablePadding: false, label: 'Responsable Comite' },
+  { id: 'id_contrato', numeric: false, disablePadding: true, label: '# Contrato' },
+  { id: 'id_usuario', numeric: false, disablePadding: false, label: 'Contratante' },
+  { id: 'anio_pago', numeric: false, disablePadding: false, label: 'Año Pagado' },
+  { id: 'mes_pago', numeric: false, disablePadding: false, label: 'Mes en que pago' },
+  { id: 'monto_pago', numeric: false, disablePadding: false, label: 'Monto Pagado' },
+  { id: 'metodo_pago', numeric: false, disablePadding: false, label: 'Método de pago' },
+  { id: 'observaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
 
 
 ];
@@ -144,9 +147,12 @@ export default function Ver_usuarios() {
     const query = searchQuery.toLowerCase();
     return (
       row.Contratante?.toLowerCase().includes(query) ||
-      row.num_contrato?.toLowerCase().includes(query) ||
-      row.Fecha_contrato?.toLowerCase().includes(query) ||
-      row.respon_comite?.toLowerCase().includes(query) 
+      row.Contrato?.toLowerCase().includes(query) ||
+      row.anio_pago?.toString().toLowerCase().includes(query) ||
+      row.mes_pago?.toLowerCase().includes(query) ||
+      row.monto_pago?.toLowerCase().includes(query) ||
+      row.metodo_pago?.toLowerCase().includes(query) ||
+      row.observaciones?.toLowerCase().includes(query) 
     );
   });
 
@@ -195,8 +201,8 @@ export default function Ver_usuarios() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        select: 'c.num_contrato,c.Fecha_contrato,c.respon_comite, CONCAT_WS(" ",u.Nombre, " ", u.Apellido_pat, " ", u.Apellido_mat) AS Contratante',
-        table: 'contratos c LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario',
+        select: ' p.anio_pago, p.mes_pago, p.monto_pago, p.metodo_pago, p.observaciones, CONCAT_WS(" ",u.Nombre, " ", u.Apellido_pat, " ", u.Apellido_mat) AS Contratante,  c.num_contrato AS Contrato',
+        table: 'pagos p LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario LEFT JOIN contratos c ON p.id_contrato = c.id_contrato',
       })
     })
       .then((res) => res.json())
@@ -208,7 +214,9 @@ export default function Ver_usuarios() {
       .catch((err) => console.error('Error al obtener usuarios:', err));
   }, []);
 
-
+  console.log(rows)
+console.log(rows.Contrato)
+console.log(rows.Contratante)
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - rows.length);
 
@@ -216,7 +224,7 @@ export default function Ver_usuarios() {
     <Box sx={{ width: '95%', margin: 'auto' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Contratos</label>
+          <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Pagos</label>
         </div>
         <EnhancedTableToolbar numSelected={selected.length} />
         <div style={{ padding: '0 16px 16px', textAlign: 'right' }}>
@@ -270,12 +278,15 @@ export default function Ver_usuarios() {
                       />
                     </TableCell>
                     <TableCell component="th" id={labelId} scope="row" padding="none">
-                      {row.Contratante}
+                      {row.Contrato}
                     </TableCell>
 
-                    <TableCell>{row.num_contrato}</TableCell>
-                    <TableCell>{row.Fecha_contrato}</TableCell>
-                    <TableCell>{row.respon_comite}</TableCell>
+                    <TableCell>{row.Contratante}</TableCell>
+                    <TableCell>{row.anio_pago}</TableCell>
+                    <TableCell>{row.mes_pago}</TableCell>
+                    <TableCell>{row.monto_pago}</TableCell>
+                    <TableCell>{row.metodo_pago}</TableCell>
+                    <TableCell>{row.observaciones}</TableCell>
                   </TableRow>
                 );
               })}

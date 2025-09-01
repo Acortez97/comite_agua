@@ -6,7 +6,7 @@ const pool = mysql.createPool({
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASS,
     database: process.env.MYSQL_DB,
-    connectionLimit: 10 // Puedes ajustar el número de conexiones simultáneas
+    connectionLimit: 20 // Puedes ajustar el número de conexiones simultáneas
 });
 
 // Función para ejecutar consultas SQL con promesas

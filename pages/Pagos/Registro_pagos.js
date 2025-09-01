@@ -2,46 +2,141 @@ import React from 'react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import { Select } from '@mui/material';
 
 
 export default function Registro_usuarios() {
 
-    const [nombreUsuario, setNombreUsuario] = useState('');
-    const [ap_pat, setAp_pat] = useState('');
-    const [ap_mat, setAp_mat] = useState('');
-    const [num_cel, setNum_cel] = useState('');
-    const [correo, setCorreo] = useState('');
-    const [domicilio, setDomicilio] = useState('');
+    const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(''); // id seleccionado
+    const [contratoSeleccionado, setContratoSeleccionado] = useState(''); // id seleccionado
+    const [num_contrato, setNum_contrato] = useState('');
+    const [anio_pago, setAnio_pago] = useState('');
+    const [mes_pago, setMes_pago] = useState('');
+    const [monto_pago, setMonto_pago] = useState('');
+    const [metodo_pago, setMetodo_pago] = useState('');
+    const [observaciones, setObservaciones] = useState('');
+
+
+    const [usuarios, setUsuarios] = useState([]);
+    const [contrato, setContrato] = useState([]);
 
     // --- Lógica de guardado a DB ---
     function getFechaLocal() {
         const now = new Date();
         const pad = (n) => n.toString().padStart(2, '0');
-        const offset = now.getTimezoneOffset();
-        now.setMinutes(now.getMinutes() - offset);
+
+        // Ajustar al horario local
         const año = now.getFullYear();
         const mes = pad(now.getMonth() + 1);
         const dia = pad(now.getDate());
-        return `${año}-${mes}-${dia}`;
+        const horas = pad(now.getHours());
+        const minutos = pad(now.getMinutes());
+        const segundos = pad(now.getSeconds());
+
+        return `${año}-${mes}-${dia} ${horas}:${minutos}:${segundos}`;
     }
 
 
-    const guardarUsuario = async () => {
+
+
+    React.useEffect(() => {
+        fetch('/api/Selectgeneric/Select_Gen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                select: 'id_usuario, CONCAT_WS("",Nombre, " ", Apellido_pat, " ", Apellido_mat) AS Contratante',
+                table: 'usuarios',
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (!data.error) {
+                    setUsuarios(data);
+                }
+            })
+            .catch((err) => console.error('Error al obtener usuarios:', err));
+    }, []);
+    /* React.useEffect(() => {
+         if (!usuarioSeleccionado) {
+             setContrato([]); // Limpiar contratos si no hay usuario
+             return;
+         }
+ 
+         fetch('/api/Selectgeneric/SelectWithWhere', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+                 select: 'id_Contrato, num_contrato, id_usuario',
+                 table: 'contratos',
+                 column: 'id_usuario',
+                 id: usuarioSeleccionado,
+             })
+         })
+             .then((res) => res.json())
+             .then((data) => {
+                 if (!data.error) {
+                     setContrato(data);
+                 }
+             })
+             .catch((err) => console.error('Error al obtener usuarios:', err));
+     }, [[usuarioSeleccionado]]);*/
+
+    const [lastUsuarioConsultado, setLastUsuarioConsultado] = useState(null);
+
+    useEffect(() => {
+        // Solo hacer fetch si el usuario seleccionado ha cambiado realmente
+        if (!usuarioSeleccionado || usuarioSeleccionado === lastUsuarioConsultado) {
+            return;
+        }
+
+        setLastUsuarioConsultado(usuarioSeleccionado); // Guardamos para comparar
+
+        fetch('/api/Selectgeneric/SelectWithWhere', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                select: 'id_contrato, num_contrato, id_usuario',
+                table: 'contratos',
+                column: 'id_usuario',
+                id: usuarioSeleccionado,
+            })
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (!data.error) {
+                    setContrato(data);
+                } else {
+                    setContrato([]);
+                }
+            })
+            .catch((err) => {
+                console.error('Error al obtener contratos:', err);
+                setContrato([]);
+            });
+    }, [usuarioSeleccionado, lastUsuarioConsultado]);
+
+
+    function borrar() {
+        setUsuarioSeleccionado('');
+        setNum_contrato('');
+        setFecha_contrato('');
+        setRespon_comite('');
+    }
+    console.log("los datos del usuario: ", usuarios)
+    const guardarPago = async () => {
         const payload = {
-            Nombre: nombreUsuario,
-            Apellido_pat: ap_pat,
-            Apellido_mat: ap_mat,
-            num_celular: num_cel,
-            correo: correo,
-            domicilio: domicilio,
+            id_usuario: usuarioSeleccionado,
+            num_contrato: num_contrato,
+            Fecha_contrato: Fecha_contrato,
+            respon_comite: respon_comite,
             status: 1,
         };
 
-        if (payload.Nombre === '' || payload.Nombre === undefined) {
-            Swal.fire({ icon: 'error', title: '¡Error!', text: 'El Nombre del USUARIO es OBLIGATORIO.' });
+        if (payload.id_usuario === '' || payload.id_usuario === undefined) {
+            Swal.fire({ icon: 'error', title: '¡Error!', text: 'El USUARIO es OBLIGATORIO.' });
             return;
         }
-        const data = { table: 'usuarios', data: { ...payload, fecha_creacion: getFechaLocal() } };
+        const data = { table: 'contratos', data: { ...payload, fecha_creacion: getFechaLocal() } };
         const response = await fetch('/api/InsertGeneral/insert', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const results = await response.json();
         console.log(results)
@@ -49,8 +144,12 @@ export default function Registro_usuarios() {
         Swal.fire({ icon: 'success', title: '¡Registro exitoso!', text: 'Los datos se han guardado correctamente.' })
 
         // Limpiar y recargar
+        borrar();
+
 
     };
+    console.log("el usuario seleccionado: ", contratoSeleccionado)
+    const [busquedaUsuario, setBusquedaUsuario] = useState('');
 
     return (
         <>
@@ -63,80 +162,144 @@ export default function Registro_usuarios() {
                 borderRadius: '10px',
                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
             }}>
-                <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Registro de Usuarios</h1>
+                <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Registro de Pagos</h1>
 
                 <form onSubmit={(e) => {
                     e.preventDefault(); // ❗ Evita recarga
-                    guardarUsuario();   // Ejecuta la lógica
+                    guardarPago();   // Ejecuta la lógica
                 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/*<div>
+                        <label><b>Nombre:</b></label>
+                        <select
+                            required
+                            value={usuarioSeleccionado}
+                            onChange={(e) => setUsuarioSeleccionado(e.target.value)}
+                            style={inputStyle}
+                        >
+                            <option value="">SELECCIONE EL CONTRATANTE</option>
+                            {usuarios.map((usuario) => (
+                                <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                                    {usuario.Contratante}
+                                </option>
+                            ))}
+                        </select>
+                    </div>*/}
+                    <div>
+                        <label><b>Buscar Usuario:</b></label>
+                        <input
+                            type="text"
+                            placeholder="Escribe el nombre del contratante"
+                            value={busquedaUsuario}
+                            onChange={(e) => setBusquedaUsuario(e.target.value)}
+                            style={inputStyle}
+                        />
+                    </div>
+
                     <div>
                         <label><b>Nombre:</b></label>
-                        <input
-                            type="text"
+                        <select
                             required
-                            placeholder="NOMBRE DEL USUARIO"
-                            value={nombreUsuario}
-                            onChange={(e) => setNombreUsuario(e.target.value)}
+                            value={usuarioSeleccionado}
+                            onChange={(e) => setUsuarioSeleccionado(e.target.value)}
                             style={inputStyle}
-                        />
+                        >
+                            <option value="">SELECCIONE EL CONTRATANTE</option>
+                            {usuarios
+                                .filter(usuario =>
+                                    usuario.Contratante.toLowerCase().includes(busquedaUsuario.toLowerCase())
+                                )
+                                .map((usuario) => (
+                                    <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                                        {usuario.Contratante}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label><b># Contrato:</b></label>
+                        <select
+                            required
+                            value={contratoSeleccionado}
+                            onChange={(e) => setContratoSeleccionado(e.target.value)}
+                            style={inputStyle}
+                        >
+                            <option value="">SELECCIONE UN CONTRATO</option>
+                            {contrato.map((contrato) => (
+                                <option key={contrato.id_contrato} value={contrato.id_contrato}>
+                                    {contrato.num_contrato}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+
+                    <div>
+                        <label><b>Año a pagar:</b></label>
+                        <select
+                            required
+                            value={anio_pago}
+                            onChange={(e) => setAnio_pago(e.target.value)}
+                            style={inputStyle}
+                        >
+                            <option value="">SELECCIONE UN AÑO</option>
+                            <option value="2000">2000</option>
+                            <option value="2001">2001</option>
+                            <option value="2002">2002</option>
+                            <option value="2003">2003</option>
+                        </select>
                     </div>
 
                     <div>
-                        <label><b>Apellido Paterno:</b></label>
+                        <label><b>Fecha del Contrato:</b></label>
+                        <select
+                            required
+                            value={mes_pago}
+                            onChange={(e) => setMes_pago(e.target.value)}
+                            style={inputStyle}
+                        >
+                            <option value="">SELECCIONE UN MES</option>
+                            <option value="ENERO">ENERO</option>
+                            <option value="FEBRERO">FEBRERO</option>
+                            <option value="MARZO">MARZO</option>
+                            <option value="ABRIL">ABRIL</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label><b>Monto a Pagar:</b></label>
+                        <input
+                            type="NUMBER"
+                            placeholder="INGRESA EL MONTO TOTAL A PAGAR"
+                            value={monto_pago}
+                            onChange={(e) => setMonto_pago(e.target.value)}
+                            style={inputStyle}
+                        />
+                    </div>
+                    <div>
+                        <label><b>Método de Pago:</b></label>
                         <input
                             type="text"
-                            placeholder="APELLIDO PATERNO"
-                            value={ap_pat}
-                            onChange={(e) => setAp_pat(e.target.value)}
+                            placeholder="INGRESA EL MÉTODO DE PAGO (EFECTIVO / TRANSFERENCIA)"
+                            value={metodo_pago}
+                            onChange={(e) => setMetodo_pago(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
-
                     <div>
-                        <label><b>Apellido Materno:</b></label>
+                        <label><b>Observaciones:</b></label>
                         <input
                             type="text"
-                            placeholder="APELLIDO MATERNO"
-                            value={ap_mat}
-                            onChange={(e) => setAp_mat(e.target.value)}
+                            placeholder="¿HUBO ALGUNA OBSERVACIÓN?"
+                            value={observaciones}
+                            onChange={(e) => setObservaciones(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
 
-                    <div>
-                        <label><b>Número de celular:</b></label>
-                        <input
-                            type="text"
-                            placeholder="NÚMERO CELULAR"
-                            value={num_cel}
-                            onChange={(e) => setNum_cel(e.target.value)}
-                            style={inputStyle}
-                        />
-                    </div>
 
-                    <div>
-                        <label><b>Correo:</b></label>
-                        <input
-                            type="email"
-                            placeholder="CORREO"
-                            value={correo}
-                            onChange={(e) => setCorreo(e.target.value)}
-                            style={inputStyle}
-                        />
-                    </div>
 
-                    <div>
-                        <label><b>Domicilio:</b></label>
-                        <input
-                            type="text"
-                            placeholder="DOMICILIO"
-                            value={domicilio}
-                            onChange={(e) => setDomicilio(e.target.value)}
-                            style={inputStyle}
-                        />
-                    </div>
 
-                    <button type="submit" style={buttonStyle}>Registrar Usuario</button>
+                    <button type="submit" style={buttonStyle}>Registrar Pago</button>
                 </form>
             </div>
         </>

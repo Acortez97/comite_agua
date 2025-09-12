@@ -5,13 +5,13 @@ import Swal from 'sweetalert2';
 import withAuthRole from '../../components/withAuthRole'
 
 
- function Registro_usuarios() {
+function Registro_users() {
 
-    const [nombreUsuario, setNombreUsuario] = useState('');
-    const [ap_pat, setAp_pat] = useState('');
-    const [ap_mat, setAp_mat] = useState('');
-    const [num_cel, setNum_cel] = useState('');
-    const [correo, setCorreo] = useState('');
+    const [nombre, setNombre] = useState('');
+    const [apellido, setApellido] = useState('');
+    const [usuario, setUsuario] = useState('');
+    const [pass, setPass] = useState('');
+    const [rol, setRol] = useState('');
     const [domicilio, setDomicilio] = useState('');
 
     // --- Lógica de guardado a DB ---
@@ -29,33 +29,30 @@ import withAuthRole from '../../components/withAuthRole'
 
     const guardarUsuario = async () => {
         const payload = {
-            Nombre: nombreUsuario,
-            Apellido_pat: ap_pat,
-            Apellido_mat: ap_mat,
-            num_celular: num_cel,
-            correo: correo,
-            domicilio: domicilio,
-            status: 1,
+            nombre: nombre,
+            apellido: apellido,
+            usuario: usuario,
+            pass: pass,
+            rol: rol,
         };
 
-        if (payload.Nombre === '' || payload.Nombre === undefined) {
+        if (payload.nombre === '' || payload.nombre === undefined) {
             Swal.fire({ icon: 'error', title: '¡Error!', text: 'El Nombre del USUARIO es OBLIGATORIO.' });
             return;
         }
-        const data = { table: 'usuarios', data: { ...payload, fecha_creacion: getFechaLocal() } };
-        const response = await fetch('/api/InsertGeneral/insert', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const data = { table: 'users_admins', data: { ...payload, fecha_creacion: getFechaLocal() } };
+        const response = await fetch('/api/InsertGeneral/insert_rol', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const results = await response.json();
         console.log(results)
-        if (!response.ok) { throw new Error(results?.error || 'Error al insertar'); }
+        if (!response.ok) { throw new Error(results?.message || 'Error al insertar'); }
         Swal.fire({ icon: 'success', title: '¡Registro exitoso!', text: 'Los datos se han guardado correctamente.' })
 
         // Limpiar y recargar
-        setNombreUsuario('')
-        setAp_mat('')
-        setAp_pat('')
-        setCorreo('')
-        setDomicilio('')
-        setNum_cel('')
+        setNombre('')
+        setApellido('')
+        setUsuario('')
+        setPass('')
+        setRol('')
 
     };
 
@@ -82,74 +79,62 @@ import withAuthRole from '../../components/withAuthRole'
                             type="text"
                             required
                             placeholder="NOMBRE DEL USUARIO"
-                            value={nombreUsuario}
-                            onChange={(e) => setNombreUsuario(e.target.value)}
+                            value={nombre}
+                            onChange={(e) => setNombre(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
 
                     <div>
-                        <label><b>Apellido Paterno:</b></label>
+                        <label><b>Apellido:</b></label>
                         <input
                             type="text"
-                            placeholder="APELLIDO PATERNO"
-                            value={ap_pat}
-                            onChange={(e) => setAp_pat(e.target.value)}
+                            placeholder="APELLIDO O APELLIDOS"
+                            value={apellido}
+                            onChange={(e) => setApellido(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
 
                     <div>
-                        <label><b>Apellido Materno:</b></label>
+                        <label><b>Usuario:</b></label>
                         <input
                             type="text"
-                            placeholder="APELLIDO MATERNO"
-                            value={ap_mat}
-                            onChange={(e) => setAp_mat(e.target.value)}
+                            placeholder="USUARIO PARA INICIAR SESIÓN"
+                            value={usuario}
+                            onChange={(e) => setUsuario(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
 
                     <div>
-                        <label><b>Número de celular:</b></label>
+                        <label><b>Contraseña:</b></label>
+                        <input
+                            type="password"
+                            placeholder="CONTRASEÑA"
+                            value={pass}
+                            onChange={(e) => setPass(e.target.value)}
+                            style={inputStyle}
+                        />
+                    </div>
+
+                    <div>
+                        <label><b>Rol:</b></label>
                         <input
                             type="text"
-                            placeholder="NÚMERO CELULAR"
-                            value={num_cel}
-                            onChange={(e) => setNum_cel(e.target.value)}
+                            placeholder="admin o user"
+                            value={rol}
+                            onChange={(e) => setRol(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
-
-                    <div>
-                        <label><b>Correo:</b></label>
-                        <input
-                            type="email"
-                            placeholder="CORREO"
-                            value={correo}
-                            onChange={(e) => setCorreo(e.target.value)}
-                            style={inputStyle}
-                        />
-                    </div>
-
-                    <div>
-                        <label><b>Domicilio:</b></label>
-                        <input
-                            type="text"
-                            placeholder="DOMICILIO"
-                            value={domicilio}
-                            onChange={(e) => setDomicilio(e.target.value)}
-                            style={inputStyle}
-                        />
-                    </div>
-
                     <button type="submit" style={buttonStyle}>Registrar Usuario</button>
                 </form>
             </div>
         </>
     )
 }
-export default withAuthRole(Registro_usuarios, ['admin'])
+export default withAuthRole(Registro_users, ['admin'])
 // 🎨 Estilos reutilizables
 const inputStyle = {
     width: '100%',

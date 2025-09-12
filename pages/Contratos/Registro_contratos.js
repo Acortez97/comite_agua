@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Select } from '@mui/material';
+import withAuthRole from '../../components/withAuthRole'
 
 
-export default function Registro_usuarios() {
+ function Registro_contratos() {
 
     const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(''); // id seleccionado
     const [num_contrato, setNum_contrato] = useState('');
@@ -167,6 +168,7 @@ export default function Registro_usuarios() {
         </>
     )
 }
+export default withAuthRole(Registro_contratos, ['admin'])
 // 🎨 Estilos reutilizables
 const inputStyle = {
     width: '100%',

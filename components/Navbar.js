@@ -1,9 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
+import { AuthContext } from "../context/authContext";
 
 export default function Navbar() {
+  const { user, logout, loading  } = useContext(AuthContext);
+    //if (!user) return null; // No mostrar Nav si no hay sesión
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdowns, setDropdowns] = useState({
     usuarios: false,
@@ -11,14 +15,12 @@ export default function Navbar() {
     pagos: false,
   });
 
-  // Para controlar la dirección (right o left) de cada dropdown
   const [dropdownDirection, setDropdownDirection] = useState({
     usuarios: "right",
     contratos: "right",
     pagos: "right",
   });
 
-  // Refs para cada dropdown para medir posición
   const dropdownRefs = {
     usuarios: useRef(null),
     contratos: useRef(null),
@@ -27,7 +29,6 @@ export default function Navbar() {
 
   const toggleMenu = () => {
     setMenuOpen((prev) => !prev);
-    // Cerrar todos los dropdowns cuando abres/cierra el menú móvil
     setDropdowns({
       usuarios: false,
       contratos: false,
@@ -35,9 +36,7 @@ export default function Navbar() {
     });
   };
 
-  // Función para abrir/cerrar cada dropdown individualmente
   const toggleDropdown = (name) => {
-    // Cerrar los otros dropdowns, abrir/cerrar solo el seleccionado
     setDropdowns((prev) => {
       const newState = {
         usuarios: false,
@@ -49,10 +48,8 @@ export default function Navbar() {
     });
   };
 
-  // Efecto para detectar clic fuera y cerrar dropdowns
   useEffect(() => {
     function handleClickOutside(event) {
-      // Verificar si el click está fuera de cualquier dropdown abierto
       const isOutside = !Object.values(dropdownRefs).some(
         (ref) => ref.current && ref.current.contains(event.target)
       );
@@ -72,7 +69,6 @@ export default function Navbar() {
     };
   }, []);
 
-  // Efecto para calcular la dirección (left/right) cuando un dropdown se abre
   useEffect(() => {
     Object.entries(dropdowns).forEach(([name, isOpen]) => {
       if (isOpen) {
@@ -80,7 +76,7 @@ export default function Navbar() {
         if (!ref) return;
 
         const rect = ref.getBoundingClientRect();
-        const dropdownWidth = 160; // igual al min-width en CSS para dropdown-content
+        const dropdownWidth = 160;
         const spaceRight = window.innerWidth - rect.right;
 
         setDropdownDirection((prev) => ({
@@ -100,6 +96,21 @@ export default function Navbar() {
     });
   };
 
+  const handleLogout = () => {
+    logout();
+    closeAll();
+    window.location.href = "/login";
+  };
+  if (loading) {
+    // Opcional: mostrar spinner o nav mínimo mientras carga
+    return (
+      <nav className="navbar">
+        <div className="logo">Comité del Agua de San Gaspar</div>
+        <p>Cargando...</p>
+      </nav>
+    );
+  }
+
   return (
     <nav className="navbar">
       <div className="logo">Comité del Agua de San Gaspar</div>
@@ -108,89 +119,128 @@ export default function Navbar() {
         {menuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
       </button>
 
-      <div className={`nav-menu ${menuOpen ? "open" : ""}`}>
-        <Link href="/" onClick={closeAll}>
-          Inicio
-        </Link>
+      {user ? (
+        <div className={`nav-menu ${menuOpen ? "open" : ""}`}>
+          <Link href="/" onClick={closeAll}>
+            Inicio
+          </Link>
 
-        {/* Usuarios */}
-        <div className="dropdown" ref={dropdownRefs.usuarios}>
+          {/* USUARIOS */}
+          {(user.rol === "admin" || user.rol === "user") && (
+            <div className="dropdown" ref={dropdownRefs.usuarios}>
+              <button className="dropbtn" onClick={() => toggleDropdown("usuarios")}>
+                Usuarios ▾
+              </button>
+              {dropdowns.usuarios && (
+                <div
+                  className={`dropdown-content ${
+                    dropdownDirection.usuarios === "left" ? "left" : ""
+                  }`}
+                >
+                  <Link href="/Usuarios/Ver_usuarios" onClick={closeAll}>
+                    Ver Usuarios
+                  </Link>
+                  {user.rol === "admin" && (
+                    <>
+                      <Link href="/Usuarios/Registro_usuarios" onClick={closeAll}>
+                        Registrar Usuarios
+                      </Link>
+                      <Link href="/admin/Registro_users" onClick={closeAll}>
+                        Roles
+                      </Link>
+                       <Link href="/admin/Cambio_pass" onClick={closeAll}>
+                        actualizar Contrasela
+                      </Link>
+                      <Link href="/Usuarios/Editar_usuarios" onClick={closeAll}>
+                        Editar Usuarios
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CONTRATOS */}
+          {(user.rol === "admin" || user.rol === "user") && (
+            <div className="dropdown" ref={dropdownRefs.contratos}>
+              <button className="dropbtn" onClick={() => toggleDropdown("contratos")}>
+                Contratos ▾
+              </button>
+              {dropdowns.contratos && (
+                <div
+                  className={`dropdown-content ${
+                    dropdownDirection.contratos === "left" ? "left" : ""
+                  }`}
+                >
+                  <Link href="/Contratos/Ver_contratos" onClick={closeAll}>
+                    Ver Contratos
+                  </Link>
+                  {user.rol === "admin" && (
+                    <>
+                      <Link href="/Contratos/Registro_contratos" onClick={closeAll}>
+                        Registrar Contratos
+                      </Link>
+                      <Link href="/Contratos/Editar_contratos" onClick={closeAll}>
+                        Editar Contratos
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PAGOS */}
+          {(user.rol === "admin" || user.rol === "user") && (
+            <div className="dropdown" ref={dropdownRefs.pagos}>
+              <button className="dropbtn" onClick={() => toggleDropdown("pagos")}>
+                Pagos ▾
+              </button>
+              {dropdowns.pagos && (
+                <div
+                  className={`dropdown-content ${
+                    dropdownDirection.pagos === "left" ? "left" : ""
+                  }`}
+                >
+                  <Link href="/Pagos/Ver_pagos" onClick={closeAll}>
+                    Ver Pagos
+                  </Link>
+                  {user.rol === "admin" && (
+                    <>
+                      <Link href="/Pagos/Registro_pagos" onClick={closeAll}>
+                        Registrar Pagos
+                      </Link>
+                      <Link href="/Pagos/Editar_pagos" onClick={closeAll}>
+                        Registrar Aportaciones extras
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CERRAR SESIÓN */}
           <button
-            className="dropbtn"
-            onClick={() => toggleDropdown("usuarios")}
+            onClick={handleLogout}
+            className="logout-btn"
+            style={{
+              marginLeft: "20px",
+              background: "transparent",
+              border: "none",
+              color: "#fff",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
           >
-            Usuarios ▾
+            Cerrar Sesión
           </button>
-          {dropdowns.usuarios && (
-            <div
-              className={`dropdown-content ${
-                dropdownDirection.usuarios === "left" ? "left" : ""
-              }`}
-            >
-              <Link href="/Usuarios/Ver_usuarios" onClick={closeAll}>
-                Ver Usuarios
-              </Link>
-              <Link href="/Usuarios/Registro_usuarios" onClick={closeAll}>
-                Registrar Usuarios
-              </Link>
-              <Link href="/Usuarios/Editar_usuarios" onClick={closeAll}>
-                Editar Usuarios
-              </Link>
-            </div>
-          )}
         </div>
-
-        {/* Contratos */}
-        <div className="dropdown" ref={dropdownRefs.contratos}>
-          <button
-            className="dropbtn"
-            onClick={() => toggleDropdown("contratos")}
-          >
-            Contratos ▾
-          </button>
-          {dropdowns.contratos && (
-            <div
-              className={`dropdown-content ${
-                dropdownDirection.contratos === "left" ? "left" : ""
-              }`}
-            >
-              <Link href="/Contratos/Ver_contratos" onClick={closeAll}>
-                Ver Contratos
-              </Link>
-              <Link href="/Contratos/Registro_contratos" onClick={closeAll}>
-                Registrar Contratos
-              </Link>
-              <Link href="/Contratos/Editar_contratos" onClick={closeAll}>
-                Editar Contratos
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Pagos */}
-        <div className="dropdown" ref={dropdownRefs.pagos}>
-          <button className="dropbtn" onClick={() => toggleDropdown("pagos")}>
-            Pagos ▾
-          </button>
-          {dropdowns.pagos && (
-            <div
-              className={`dropdown-content ${
-                dropdownDirection.pagos === "left" ? "left" : ""
-              }`}
-            >
-              <Link href="/Pagos/Ver_pagos" onClick={closeAll}>
-                Ver Pagos
-              </Link>
-              <Link href="/Pagos/Registro_pagos" onClick={closeAll}>
-                Registrar Pagos
-              </Link>
-              <Link href="/Pagos/Editar_pagos" onClick={closeAll}>
-                Registrar Aportaciones extras
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
+      ) :(
+    
+        <p style={{ fontStyle: 'italic' }}>Inicia sesión para ver más opciones</p>
+      )}
     </nav>
   );
 }

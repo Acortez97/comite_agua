@@ -17,9 +17,9 @@ const styles = {
   wrapper: {
     display: 'flex',
     flexDirection: 'column',
-    minHeight: '100vh'
+    minHeight: '100vh',
   },
   main: {
-    flex: 1
-  }
+    flex: 1,
+  },
 }

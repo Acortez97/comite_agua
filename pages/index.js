@@ -35,9 +35,37 @@ export default function Home() {
   }, [])
 
   return (
-    <div>
-      <br />
-      <h1 style={{ textAlign: 'center' }}>Bienvenido al Portal de Administración del Comité de Agua</h1>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '80vh',
+      padding: '1px',
+      backgroundColor: '#e0f7fa',
+      color: '#00796b',
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      textAlign: 'center',
+    }}>
+      <h1 style={{
+        fontSize: '3.1rem',
+        fontWeight: '700',
+        marginBottom: '50px',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+      }}>
+        Bienvenido al Portal de Administración del Comité de Agua
+      </h1>
+
+      <img
+        src="/agua.png"
+        alt="Icono Comité del Agua"
+        style={{
+          width: '200px',
+          height: 'auto',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 121, 107, 0.4)'
+        }}
+      />
     </div>
   )
 }

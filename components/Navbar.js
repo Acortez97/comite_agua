@@ -151,9 +151,9 @@ export default function Navbar() {
                        <Link href="/admin/Cambio_pass" onClick={closeAll}>
                         actualizar Contrasela
                       </Link>
-                      <Link href="/Usuarios/Editar_usuarios" onClick={closeAll}>
+                     {/**<Link href="/Usuarios/Editar_usuarios" onClick={closeAll}>
                         Editar Usuarios
-                      </Link>
+                      </Link> */} 
                     </>
                   )}
                 </div>
@@ -181,9 +181,9 @@ export default function Navbar() {
                       <Link href="/Contratos/Registro_contratos" onClick={closeAll}>
                         Registrar Contratos
                       </Link>
-                      <Link href="/Contratos/Editar_contratos" onClick={closeAll}>
+                     {/*} <Link href="/Contratos/Editar_contratos" onClick={closeAll}>
                         Editar Contratos
-                      </Link>
+                      </Link>*/}
                     </>
                   )}
                 </div>
@@ -206,14 +206,18 @@ export default function Navbar() {
                   <Link href="/Pagos/Ver_pagos" onClick={closeAll}>
                     Ver Pagos
                   </Link>
+                  <Link href="/Pagos/Ver_aportaciones" onClick={closeAll}>
+                        Ver Aportaciones Voluntarias
+                      </Link>
                   {user.rol === "admin" && (
                     <>
                       <Link href="/Pagos/Registro_pagos" onClick={closeAll}>
                         Registrar Pagos
                       </Link>
-                      <Link href="/Pagos/Editar_pagos" onClick={closeAll}>
+                      <Link href="/Pagos/Registro_Avoluntarias" onClick={closeAll}>
                         Registrar Aportaciones extras
                       </Link>
+                      
                     </>
                   )}
                 </div>

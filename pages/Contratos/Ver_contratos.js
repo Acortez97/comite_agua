@@ -1,15 +1,14 @@
-
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { alpha } from '@mui/material/styles';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
-  TableRow, TableSortLabel, Toolbar, Typography, Paper, Checkbox, IconButton,
-  Tooltip, FormControlLabel, Switch
+  TableRow, TableSortLabel, Toolbar, Typography, Paper, Checkbox,
+  FormControlLabel, Switch
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) return -1;
@@ -27,9 +26,7 @@ const headCells = [
   { id: 'id_usuario', numeric: false, disablePadding: true, label: 'Nombre' },
   { id: 'num_contrato', numeric: false, disablePadding: false, label: 'Contrato' },
   { id: 'Fecha_contrato', numeric: false, disablePadding: false, label: 'Fecha de contrato' },
-  { id: 'respon_comite', numeric: false, disablePadding: false, label: 'Responsable Comite' },
-
-
+  { id: 'respon_comite', numeric: false, disablePadding: false, label: 'Responsable Comité' },
 ];
 
 function EnhancedTableHead(props) {
@@ -104,21 +101,8 @@ function EnhancedTableToolbar({ numSelected }) {
         component="div"
         color={numSelected > 0 ? 'inherit' : 'primary'}
       >
-        {numSelected > 0 ? `${numSelected} seleccionado(s)` : 'Usuarios'}
+        {numSelected > 0 ? `${numSelected} seleccionado(s)` : 'Contratos'}
       </Typography>
-      {/*numSelected > 0 ? (
-        <Tooltip title="Eliminar">
-          <IconButton>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Filtrar">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
-      )*/}
     </Toolbar>
   );
 }
@@ -135,11 +119,8 @@ export default function Ver_usuarios() {
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState([]);
-
-  // Al inicio del componente:
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  // Lógica para filtrar según búsqueda
   const filteredRows = rows.filter((row) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -157,6 +138,22 @@ export default function Ver_usuarios() {
     [filteredRows, order, orderBy, page, rowsPerPage]
   );
 
+  const exportToExcel = () => {
+    const exportData = filteredRows.map((row) => ({
+      Contratante: row.Contratante,
+      Contrato: row.num_contrato,
+      'Fecha de Contrato': row.Fecha_contrato,
+      'Responsable Comité': row.respon_comite,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Contratos");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, "contratos.xlsx");
+  };
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -187,7 +184,6 @@ export default function Ver_usuarios() {
     setPage(0);
   };
   const handleChangeDense = (event) => setDense(event.target.checked);
-
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
   React.useEffect(() => {
@@ -208,27 +204,6 @@ export default function Ver_usuarios() {
       .catch((err) => console.error('Error al obtener usuarios:', err));
   }, []);
 
-  function formatearFechaHora(fechaStr) {
-    if (!fechaStr) return '';
-
-    // Reemplazar espacio por 'T' para parsear como fecha ISO local
-    const fechaLocal = new Date(fechaStr.replace(' ', 'T'));
-
-    const pad = (n) => n.toString().padStart(2, '0');
-
-    const año = fechaLocal.getFullYear();
-    const mes = pad(fechaLocal.getMonth() + 1);
-    const dia = pad(fechaLocal.getDate());
-    const hora = pad(fechaLocal.getHours());
-    const minuto = pad(fechaLocal.getMinutes());
-    const segundo = pad(fechaLocal.getSeconds());
-
-    return `${año}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
-  }
-
-
-  console.log("la fecha: ", rows.Fecha_contrato)
-
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - rows.length);
 
   return (
@@ -238,7 +213,12 @@ export default function Ver_usuarios() {
           <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Contratos</label>
         </div>
         <EnhancedTableToolbar numSelected={selected.length} />
-        <div style={{ padding: '0 16px 16px', textAlign: 'right' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '0 16px 16px'
+        }}>
           <input
             type="text"
             placeholder="Buscar contrato..."
@@ -252,12 +232,23 @@ export default function Ver_usuarios() {
               maxWidth: '300px'
             }}
           />
+          <button
+            onClick={exportToExcel}
+            style={{
+              marginLeft: '16px',
+              padding: '8px 16px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Exportar a Excel
+          </button>
         </div>
         <TableContainer>
-          <Table
-            sx={{ minWidth: 750 }}
-            size={dense ? 'small' : 'medium'}
-          >
+          <Table sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
             <EnhancedTableHead
               numSelected={selected.length}
               order={order}
@@ -291,19 +282,20 @@ export default function Ver_usuarios() {
                     <TableCell component="th" id={labelId} scope="row" padding="none">
                       {row.Contratante}
                     </TableCell>
-
                     <TableCell>{row.num_contrato}</TableCell>
-                    <TableCell> {row.Fecha_contrato
-                      ? new Date(row.Fecha_contrato.replace(' ', 'T')).toLocaleString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour12: false
-                      })
-                      : ''}</TableCell>
+                    <TableCell>
+                      {row.Fecha_contrato
+                        ? new Date(row.Fecha_contrato.replace(' ', 'T')).toLocaleString('es-MX', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour12: false
+                        })
+                        : ''}
+                    </TableCell>
                     <TableCell>{row.respon_comite}</TableCell>
                   </TableRow>
                 );

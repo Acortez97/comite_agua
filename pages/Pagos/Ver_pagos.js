@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { alpha } from '@mui/material/styles';
@@ -7,9 +6,9 @@ import {
   TableRow, TableSortLabel, Toolbar, Typography, Paper, Checkbox, IconButton,
   Tooltip, FormControlLabel, Switch
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) return -1;
@@ -31,8 +30,6 @@ const headCells = [
   { id: 'monto_pago', numeric: false, disablePadding: false, label: 'Monto Pagado' },
   { id: 'metodo_pago', numeric: false, disablePadding: false, label: 'Método de pago' },
   { id: 'observaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
-
-
 ];
 
 function EnhancedTableHead(props) {
@@ -107,21 +104,8 @@ function EnhancedTableToolbar({ numSelected }) {
         component="div"
         color={numSelected > 0 ? 'inherit' : 'primary'}
       >
-        {numSelected > 0 ? `${numSelected} seleccionado(s)` : 'Usuarios'}
+        {numSelected > 0 ? `${numSelected} seleccionado(s)` : 'Pagos'}
       </Typography>
-      {/*numSelected > 0 ? (
-        <Tooltip title="Eliminar">
-          <IconButton>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Filtrar">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
-      )*/}
     </Toolbar>
   );
 }
@@ -138,11 +122,8 @@ export default function Ver_usuarios() {
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState([]);
-
-  // Al inicio del componente:
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  // Lógica para filtrar según búsqueda
   const filteredRows = rows.filter((row) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -150,9 +131,9 @@ export default function Ver_usuarios() {
       row.Contrato?.toLowerCase().includes(query) ||
       row.anio_pago?.toString().toLowerCase().includes(query) ||
       row.mes_pago?.toLowerCase().includes(query) ||
-      row.monto_pago?.toLowerCase().includes(query) ||
+      row.monto_pago?.toString().toLowerCase().includes(query) ||
       row.metodo_pago?.toLowerCase().includes(query) ||
-      row.observaciones?.toLowerCase().includes(query) 
+      row.observaciones?.toLowerCase().includes(query)
     );
   });
 
@@ -163,6 +144,25 @@ export default function Ver_usuarios() {
     [filteredRows, order, orderBy, page, rowsPerPage]
   );
 
+  const exportToExcel = () => {
+    const exportData = filteredRows.map((row) => ({
+      'Contrato': row.Contrato,
+      'Contratante': row.Contratante,
+      'Año Pagado': row.anio_pago,
+      'Mes Pagado': row.mes_pago,
+      'Monto Pagado': row.monto_pago,
+      'Método de Pago': row.metodo_pago,
+      'Observaciones': row.observaciones,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pagos');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, 'pagos.xlsx');
+  };
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -193,7 +193,6 @@ export default function Ver_usuarios() {
     setPage(0);
   };
   const handleChangeDense = (event) => setDense(event.target.checked);
-
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
   React.useEffect(() => {
@@ -201,7 +200,7 @@ export default function Ver_usuarios() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        select: ' p.anio_pago, p.mes_pago, p.monto_pago, p.metodo_pago, p.observaciones, CONCAT_WS(" ",u.Nombre, " ", u.Apellido_pat, " ", u.Apellido_mat) AS Contratante,  c.num_contrato AS Contrato',
+        select: 'p.anio_pago, p.mes_pago, p.monto_pago, p.metodo_pago, p.observaciones, CONCAT_WS(" ",u.Nombre, " ", u.Apellido_pat, " ", u.Apellido_mat) AS Contratante,  c.num_contrato AS Contrato',
         table: 'pagos p LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario LEFT JOIN contratos c ON p.id_contrato = c.id_contrato',
       })
     })
@@ -211,12 +210,8 @@ export default function Ver_usuarios() {
           setRows(data);
         }
       })
-      .catch((err) => console.error('Error al obtener usuarios:', err));
+      .catch((err) => console.error('Error al obtener pagos:', err));
   }, []);
-
-  console.log(rows)
-console.log(rows.Contrato)
-console.log(rows.Contratante)
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - rows.length);
 
@@ -227,7 +222,7 @@ console.log(rows.Contratante)
           <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Pagos</label>
         </div>
         <EnhancedTableToolbar numSelected={selected.length} />
-        <div style={{ padding: '0 16px 16px', textAlign: 'right' }}>
+        <div style={{ padding: '0 16px 16px', textAlign: 'right', display: 'flex', justifyContent: 'space-between' }}>
           <input
             type="text"
             placeholder="Buscar contrato..."
@@ -241,12 +236,23 @@ console.log(rows.Contratante)
               maxWidth: '300px'
             }}
           />
+          <button
+            onClick={exportToExcel}
+            style={{
+              marginLeft: '16px',
+              padding: '8px 16px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Exportar a Excel
+          </button>
         </div>
         <TableContainer>
-          <Table
-            sx={{ minWidth: 750 }}
-            size={dense ? 'small' : 'medium'}
-          >
+          <Table sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
             <EnhancedTableHead
               numSelected={selected.length}
               order={order}
@@ -280,7 +286,6 @@ console.log(rows.Contratante)
                     <TableCell component="th" id={labelId} scope="row" padding="none">
                       {row.Contrato}
                     </TableCell>
-
                     <TableCell>{row.Contratante}</TableCell>
                     <TableCell>{row.anio_pago}</TableCell>
                     <TableCell>{row.mes_pago}</TableCell>
@@ -292,7 +297,7 @@ console.log(rows.Contratante)
               })}
               {emptyRows > 0 && (
                 <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
-                  <TableCell colSpan={6} />
+                  <TableCell colSpan={8} />
                 </TableRow>
               )}
             </TableBody>

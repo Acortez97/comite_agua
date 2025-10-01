@@ -1,143 +1,14 @@
-/*import React, { useEffect, useState } from 'react';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-
-
-
-// Define las columnas acorde a tus datos
-const columns = [
-    { id: 'id_usuario', label: 'ID Usuario', minWidth: 50 },
-    { id: 'Nombre', label: 'Nombre', minWidth: 100 },
-    { id: 'Apellido_pat', label: 'Apellido Paterno', minWidth: 150 },
-    { id: 'Apellido_mat', label: 'Apellido Materno', minWidth: 150 },
-    { id: 'num_celular', label: 'Número Celular', minWidth: 120 },
-    { id: 'correo', label: 'Correo', minWidth: 200 },
-];
-
-export default function Ver_usuarios() {
-    const [data, setData] = useState([]);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-
-    // 🔵 Función para obtener usuarios
-    const getDataUser = () => {
-        fetch('/api/Selectgeneric/Select_Gen', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                select: '*',
-                table: 'usuarios',
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (!data || data.error) {
-                    setData([]);
-                } else {
-                    setData(data);
-                }
-            })
-            .catch((error) => {
-                console.error('Error al obtener datos:', error);
-                setData([]);
-            });
-    };
-
-    useEffect(() => {
-        getDataUser();
-    }, []);
-
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
-
-    return (
-
-        <Paper sx={{ width: '90%', overflow: 'hidden', margin: 'auto' }}>
-            <br />
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Usuarios</label>
-            </div>
-            <TableContainer sx={{ maxHeight: 440 }}>
-                <Table stickyHeader aria-label="tabla usuarios">
-                    <TableHead >
-                        <TableRow >
-                            {columns.map((column) => (
-                                <TableCell
-                                    key={column.id}
-                                    style={{ minWidth: column.minWidth }}
-                                    align={column.align || 'left'} sx={{ backgroundColor: '#000', color: 'white' }}
-                                >
-                                    {column.label}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {data
-                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((row) => (
-                                <TableRow hover tabIndex={-1} key={row.id_usuario} >
-                                    {columns.map((column) => {
-                                        const value = row[column.id];
-                                        return (
-                                            <TableCell key={column.id} align={column.align || 'left'}>
-                                                {value}
-                                            </TableCell>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={data.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-           
-        </Paper>
-    );
-}*/
-
-
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { alpha } from '@mui/material/styles';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
-  TableRow, TableSortLabel, Toolbar, Typography, Paper, Checkbox, IconButton,
-  Tooltip, FormControlLabel, Switch
+  TableRow, TableSortLabel, Toolbar, Typography, Paper, Checkbox,
+  FormControlLabel, Switch
 } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
-
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-
-const headCells = [
-  { id: 'Nombre', numeric: false, disablePadding: true, label: 'Nombre' },
-  { id: 'Apellido_pat', numeric: false, disablePadding: false, label: 'Apellido Paterno' },
-  { id: 'Apellido_mat', numeric: false, disablePadding: false, label: 'Apellido Materno' },
-  { id: 'num_celular', numeric: false, disablePadding: false, label: 'Celular' },
-  { id: 'correo', numeric: false, disablePadding: false, label: 'Correo' },
-  { id: 'domicilio', numeric: false, disablePadding: false, label: 'Domicilio' },
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) return -1;
@@ -150,6 +21,15 @@ function getComparator(order, orderBy) {
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
+
+const headCells = [
+  { id: 'id_contrato', numeric: false, disablePadding: true, label: '# Contrato' },
+  { id: 'id_usuario', numeric: false, disablePadding: false, label: 'Contratante' },
+  { id: 'monto_pago', numeric: false, disablePadding: false, label: 'Monto Aportación' },
+  { id: 'metodo_pago', numeric: false, disablePadding: false, label: 'Método de Pago' },
+  { id: 'observaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
+  { id: 'fecha_aportacion', numeric: false, disablePadding: false, label: 'Fecha de Aportación' }, // ✅ NUEVO
+];
 
 function EnhancedTableHead(props) {
   const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } = props;
@@ -164,7 +44,7 @@ function EnhancedTableHead(props) {
             checked={rowCount > 0 && numSelected === rowCount}
             indeterminate={numSelected > 0 && numSelected < rowCount}
             onChange={onSelectAllClick}
-            inputProps={{ 'aria-label': 'select all users' }}
+            inputProps={{ 'aria-label': 'select all rows' }}
             sx={{ color: 'white' }}
           />
         </TableCell>
@@ -183,11 +63,11 @@ function EnhancedTableHead(props) {
               sx={{ color: 'white', '&.Mui-active': { color: 'white' } }}
             >
               {headCell.label}
-              {orderBy === headCell.id ? (
+              {orderBy === headCell.id && (
                 <Box component="span" sx={visuallyHidden}>
                   {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
                 </Box>
-              ) : null}
+              )}
             </TableSortLabel>
           </TableCell>
         ))}
@@ -223,7 +103,7 @@ function EnhancedTableToolbar({ numSelected }) {
         component="div"
         color={numSelected > 0 ? 'inherit' : 'primary'}
       >
-        {numSelected > 0 ? `${numSelected} seleccionado(s)` : 'Usuarios'}
+        {numSelected > 0 ? `${numSelected} seleccionado(s)` : 'Aportaciones Voluntarias'}
       </Typography>
     </Toolbar>
   );
@@ -233,9 +113,9 @@ EnhancedTableToolbar.propTypes = {
   numSelected: PropTypes.number.isRequired,
 };
 
-export default function Ver_usuarios() {
+export default function VerAportaciones() {
   const [order, setOrder] = React.useState('asc');
-  const [orderBy, setOrderBy] = React.useState('Nombre');
+  const [orderBy, setOrderBy] = React.useState('Contrato');
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
@@ -246,12 +126,12 @@ export default function Ver_usuarios() {
   const filteredRows = rows.filter((row) => {
     const query = searchQuery.toLowerCase();
     return (
-      row.Nombre?.toLowerCase().includes(query) ||
-      row.Apellido_pat?.toLowerCase().includes(query) ||
-      row.Apellido_mat?.toLowerCase().includes(query) ||
-      row.num_celular?.toLowerCase().includes(query) ||
-      row.correo?.toLowerCase().includes(query) ||
-      row.domicilio?.toLowerCase().includes(query)
+      row.Contratante?.toLowerCase().includes(query) ||
+      row.Contrato?.toLowerCase().includes(query) ||
+      row.monto_pago?.toString().includes(query) ||
+      row.metodo_pago?.toLowerCase().includes(query) ||
+      row.observaciones?.toLowerCase().includes(query) ||
+      row.fecha_aportacion?.toLowerCase().includes(query)
     );
   });
 
@@ -261,6 +141,25 @@ export default function Ver_usuarios() {
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [filteredRows, order, orderBy, page, rowsPerPage]
   );
+
+  const exportToExcel = () => {
+    const exportData = filteredRows.map((row) => ({
+      'Contrato': row.Contrato,
+      'Contratante': row.Contratante,
+      'Monto Pagado': row.monto_pago,
+      'Método de Pago': row.metodo_pago,
+      'Observaciones': row.observaciones,
+      'Fecha de Aportación': row.fecha_aportacion,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Aportaciones');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, 'aportaciones_voluntarias.xlsx');
+  };
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -294,42 +193,20 @@ export default function Ver_usuarios() {
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
   React.useEffect(() => {
-    fetch('/api/Selectgeneric/Select_Gen', {
+    fetch('/api/Selectgeneric/SelectWithJoin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        select: '*',
-        table: 'usuarios',
+        select: `av.fecha_aportacion, av.monto AS monto_pago, av.metodo AS metodo_pago, av.observaciones,  CONCAT_WS(" ", u.Nombre, u.Apellido_pat, u.Apellido_mat) AS Contratante,  c.num_contrato AS Contrato `,
+        table: `aportacion_voluntaria av LEFT JOIN usuarios u ON av.id_usuario = u.id_usuario LEFT JOIN contratos c ON av.id_contrato = c.id_contrato `,
       })
     })
       .then((res) => res.json())
       .then((data) => {
-        if (!data.error) {
-          setRows(data);
-        }
+        if (!data.error) setRows(data);
       })
-      .catch((err) => console.error('Error al obtener usuarios:', err));
+      .catch((err) => console.error('Error al obtener aportaciones:', err));
   }, []);
-
-  const exportToExcel = () => {
-    const exportData = filteredRows.map(row => ({
-      Nombre: row.Nombre,
-      Apellido_Paterno: row.Apellido_pat,
-      Apellido_Materno: row.Apellido_mat,
-      Celular: row.num_celular,
-      Correo: row.correo,
-      Domicilio: row.domicilio,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Usuarios");
-
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const dataBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
-
-    saveAs(dataBlob, "usuarios.xlsx");
-  };
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - rows.length);
 
@@ -337,19 +214,15 @@ export default function Ver_usuarios() {
     <Box sx={{ width: '95%', margin: 'auto' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Visualizar Usuarios</label>
+          <label style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+            Visualizar Aportaciones Voluntarias
+          </label>
         </div>
         <EnhancedTableToolbar numSelected={selected.length} />
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0 16px 16px'
-        }}>
+        <div style={{ padding: '0 16px 16px', textAlign: 'right', display: 'flex', justifyContent: 'space-between' }}>
           <input
             type="text"
-            placeholder="Buscar usuario..."
+            placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -360,24 +233,21 @@ export default function Ver_usuarios() {
               maxWidth: '300px'
             }}
           />
-
           <button
             onClick={exportToExcel}
             style={{
-              marginLeft: '10px',
+              marginLeft: '16px',
               padding: '8px 16px',
               backgroundColor: '#1976d2',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
+              cursor: 'pointer'
             }}
           >
-            Descargar Excel
+            Exportar a Excel
           </button>
         </div>
-
         <TableContainer>
           <Table sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
             <EnhancedTableHead
@@ -399,7 +269,7 @@ export default function Ver_usuarios() {
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
-                    key={row.id_usuario}
+                    key={index}
                     selected={isItemSelected}
                     sx={{ cursor: 'pointer' }}
                   >
@@ -410,20 +280,18 @@ export default function Ver_usuarios() {
                         inputProps={{ 'aria-labelledby': labelId }}
                       />
                     </TableCell>
-                    <TableCell component="th" id={labelId} scope="row" padding="none">
-                      {row.Nombre}
-                    </TableCell>
-                    <TableCell>{row.Apellido_pat}</TableCell>
-                    <TableCell>{row.Apellido_mat}</TableCell>
-                    <TableCell>{row.num_celular}</TableCell>
-                    <TableCell>{row.correo}</TableCell>
-                    <TableCell>{row.domicilio}</TableCell>
+                    <TableCell>{row.Contrato}</TableCell>
+                    <TableCell>{row.Contratante}</TableCell>
+                    <TableCell>{row.monto_pago}</TableCell>
+                    <TableCell>{row.metodo_pago}</TableCell>
+                    <TableCell>{row.observaciones}</TableCell>
+                    <TableCell>{row.fecha_aportacion}</TableCell>
                   </TableRow>
                 );
               })}
               {emptyRows > 0 && (
                 <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
-                  <TableCell colSpan={6} />
+                  <TableCell colSpan={9} />
                 </TableRow>
               )}
             </TableBody>

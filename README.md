@@ -10,3 +10,9 @@ domicilios
 contratos
 
 se crea la vista en frontend para ver usuarios
+
+## Instaladores necesarios
+
+Para ejecutar el proyecto en local, puedes instalar las siguientes herramientas (ya incluidas en esta carpeta de Google Drive):
+
+https://drive.google.com/drive/folders/1nmvKEp0DGUnZ8M8DDYQYFUn1vSSSYpl7?usp=sharing

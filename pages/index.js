@@ -57,7 +57,7 @@ export default function Home() {
       </h1>
 
       <img
-        src="/agua.png"
+        src="/logoagua.ico"
         alt="Icono Comité del Agua"
         style={{
           width: '200px',

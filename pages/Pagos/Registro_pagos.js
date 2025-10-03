@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Select } from '@mui/material';
 import withAuthRole from '../../components/withAuthRole'
+import { jsPDF } from 'jspdf';
 
 
 function Registro_pagos() {
@@ -17,6 +18,7 @@ function Registro_pagos() {
     const [metodo_pago, setMetodo_pago] = useState('');
     const [observaciones, setObservaciones] = useState('');
 
+    const logoUrl = '/logoagua.png'; 
 
     const [usuarios, setUsuarios] = useState([]);
     const [contrato, setContrato] = useState([]);
@@ -37,9 +39,6 @@ function Registro_pagos() {
         return `${año}-${mes}-${dia} ${horas}:${minutos}:${segundos}`;
     }
 
-
-
-
     React.useEffect(() => {
         fetch('/api/Selectgeneric/Select_Gen', {
             method: 'POST',
@@ -57,30 +56,6 @@ function Registro_pagos() {
             })
             .catch((err) => console.error('Error al obtener usuarios:', err));
     }, []);
-    /* React.useEffect(() => {
-         if (!usuarioSeleccionado) {
-             setContrato([]); // Limpiar contratos si no hay usuario
-             return;
-         }
- 
-         fetch('/api/Selectgeneric/SelectWithWhere', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({
-                 select: 'id_Contrato, num_contrato, id_usuario',
-                 table: 'contratos',
-                 column: 'id_usuario',
-                 id: usuarioSeleccionado,
-             })
-         })
-             .then((res) => res.json())
-             .then((data) => {
-                 if (!data.error) {
-                     setContrato(data);
-                 }
-             })
-             .catch((err) => console.error('Error al obtener usuarios:', err));
-     }, [[usuarioSeleccionado]]);*/
 
     const [lastUsuarioConsultado, setLastUsuarioConsultado] = useState(null);
 
@@ -116,45 +91,168 @@ function Registro_pagos() {
             });
     }, [usuarioSeleccionado, lastUsuarioConsultado]);
 
-
     function borrar() {
+        setBusquedaUsuario('');
         setUsuarioSeleccionado('');
+        setContratoSeleccionado('');
         setNum_contrato('');
-        setFecha_contrato('');
-        setRespon_comite('');
+        setAnio_pago('');
+        setMes_pago('');
+        setMonto_pago('');
+        setMetodo_pago('');
+        setObservaciones('');
     }
+
     console.log("los datos del usuario: ", usuarios)
+
     const guardarPago = async () => {
         const payload = {
             id_usuario: usuarioSeleccionado,
-            num_contrato: num_contrato,
-            Fecha_contrato: Fecha_contrato,
-            respon_comite: respon_comite,
+            id_contrato: contratoSeleccionado,
+            anio_pago: anio_pago,
+            mes_pago: mes_pago,
+            monto_pago: monto_pago,
+            metodo_pago: metodo_pago,
+            observaciones: observaciones,
             status: 1,
         };
+
+        console.log("Payload a guardar:", payload);
 
         if (payload.id_usuario === '' || payload.id_usuario === undefined) {
             Swal.fire({ icon: 'error', title: '¡Error!', text: 'El USUARIO es OBLIGATORIO.' });
             return;
         }
-        const data = { table: 'contratos', data: { ...payload, fecha_creacion: getFechaLocal() } };
+        if (!payload.id_contrato) {
+            Swal.fire({ icon: 'error', title: '¡Error!', text: 'El NÚMERO DE CONTRATO es OBLIGATORIO.' });
+            return;
+        }
+
+        const data = { table: 'pagos', data: { ...payload, fecha_registro: getFechaLocal() } };
         const response = await fetch('/api/InsertGeneral/insert', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const results = await response.json();
         console.log(results)
         if (!response.ok) { throw new Error(results?.error || 'Error al insertar'); }
         Swal.fire({ icon: 'success', title: '¡Registro exitoso!', text: 'Los datos se han guardado correctamente.' })
 
+        generarPDF({
+            usuario: usuarios.find(u => String(u.id_usuario) === String(usuarioSeleccionado))?.Contratante || '',
+            num_contrato,
+            anio_pago,
+            mes_pago,
+            monto_pago,
+            metodo_pago,
+            observaciones,
+            fecha_registro: getFechaLocal(),
+        });
         // Limpiar y recargar
         borrar();
-
-
     };
-    console.log("el usuario seleccionado: ", contratoSeleccionado)
+
+    // Función para generar el PDF
+    /*function generarPDF(info) {
+        const doc = new jsPDF();
+        doc.addImage(logoUrl, 'PNG', 15, 10, 30, 30);
+        doc.setFontSize(22);
+        doc.text('Recibo de Pago', 105, 20, null, null, 'center');
+
+        doc.setFontSize(12);
+        doc.text(`Nombre: ${info.usuario}`, 20, 50);
+        doc.text(`Número de Contrato: ${info.num_contrato}`, 20, 60);
+        doc.text(`Año de Pago: ${info.anio_pago}`, 20, 70);
+        doc.text(`Mes de Pago: ${info.mes_pago}`, 20, 80);
+        doc.text(`Monto Pagado: $${info.monto_pago}`, 20, 90);
+        doc.text(`Método de Pago: ${info.metodo_pago}`, 20, 100);
+        doc.text(`Observaciones: ${info.observaciones || 'Ninguna'}`, 20, 110);
+        doc.text(`Fecha de Registro: ${info.fecha_registro}`, 20, 120);
+
+        // Línea decorativa
+        doc.setLineWidth(0.5);
+        doc.line(15, 135, 195, 135);
+
+        // En vez de descargar, abrir en una nueva pestaña
+        doc.save(`ReciboPago_${info.num_contrato}_${info.anio_pago}.pdf`)
+        window.open(doc.output('bloburl'), '_blank');
+    }*/
+    function generarPDF(info) {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // 👉 Logo y encabezado
+        const logoSize = 30;
+        doc.addImage(logoUrl, 'PNG', 15, 10, logoSize, logoSize);
+
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Comité del Agua Potable', pageWidth / 2, 20, { align: 'center' });
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text('San Gaspar Tlahuelilpan, Metepec, Estado de México', pageWidth / 2, 28, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.text(`Fecha de expedición: ${info.fecha_registro}`, pageWidth - 15, 35, { align: 'right' });
+
+        // 👉 Título del recibo
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('RECIBO DE PAGO', pageWidth / 2, 50, { align: 'center' });
+
+        // 👉 Cuerpo del recibo
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`CONCEPTO: PAGO DE ANUALIDAD`, pageWidth - 15, 58, { align: 'right' });
+        const startY = 65;
+        const lineHeight = 10;
+        const fields = [
+            [`Nombre del Contratante`, info.usuario],
+            [`Número de Contrato`, info.num_contrato],
+            [`Año de Pago`, info.anio_pago],
+            [`Mes de Pago`, info.mes_pago],
+            [`Monto Pagado`, `$${parseFloat(info.monto_pago).toFixed(2)}`],
+            [`Método de Pago`, info.metodo_pago],
+            [`Observaciones`, info.observaciones || 'Ninguna'],
+        ];
+
+        fields.forEach(([label, value], i) => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${label}:`, 30, startY + i * lineHeight);
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`${value}`, 90, startY + i * lineHeight);
+        });
+
+        // 👉 Línea de separación
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.3);
+        doc.line(15, startY + fields.length * lineHeight + 10, pageWidth - 15, startY + fields.length * lineHeight + 10);
+
+        // 👉 Aviso / nota legal
+        const footerY = startY + fields.length * lineHeight + 25;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.text(
+            'Este recibo certifica que el pago por concepto de anualidad ha sido realizado correctamente ante el Comité del Agua Potable.\n' +
+            'Guarde este documento como comprobante oficial.\n\n' +
+            'Aviso de privacidad: Los datos personales aquí registrados serán utilizados únicamente para fines administrativos\n' +
+            'y de control interno del sistema de agua de San Gaspar Tlahuelilpan, Metepec, Edo. de México.',
+            pageWidth / 2,
+            footerY,
+            { align: 'center' }
+        );
+
+        doc.save(`ReciboPago_${info.num_contrato}_${info.anio_pago}.pdf`)
+        // 👉 Abrir PDF en nueva pestaña
+        const pdfBlobUrl = doc.output('bloburl');
+        window.open(pdfBlobUrl, '_blank');
+    }
+
+
     const [busquedaUsuario, setBusquedaUsuario] = useState('');
 
     return (
         <>
-
             <div style={{
                 maxWidth: '600px',
                 margin: '40px auto',
@@ -169,22 +267,7 @@ function Registro_pagos() {
                     e.preventDefault(); // ❗ Evita recarga
                     guardarPago();   // Ejecuta la lógica
                 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {/*<div>
-                        <label><b>Nombre:</b></label>
-                        <select
-                            required
-                            value={usuarioSeleccionado}
-                            onChange={(e) => setUsuarioSeleccionado(e.target.value)}
-                            style={inputStyle}
-                        >
-                            <option value="">SELECCIONE EL CONTRATANTE</option>
-                            {usuarios.map((usuario) => (
-                                <option key={usuario.id_usuario} value={usuario.id_usuario}>
-                                    {usuario.Contratante}
-                                </option>
-                            ))}
-                        </select>
-                    </div>*/}
+
                     <div>
                         <label><b>Buscar Usuario:</b></label>
                         <input
@@ -216,12 +299,18 @@ function Registro_pagos() {
                                 ))}
                         </select>
                     </div>
+
                     <div>
                         <label><b># Contrato:</b></label>
                         <select
                             required
                             value={contratoSeleccionado}
-                            onChange={(e) => setContratoSeleccionado(e.target.value)}
+                            onChange={(e) => {
+                                const selectedId = e.target.value;
+                                setContratoSeleccionado(selectedId);
+                                const contratoEncontrado = contrato.find(c => c.id_contrato == selectedId);
+                                setNum_contrato(contratoEncontrado ? contratoEncontrado.num_contrato : '');
+                            }}
                             style={inputStyle}
                         >
                             <option value="">SELECCIONE UN CONTRATO</option>
@@ -233,7 +322,6 @@ function Registro_pagos() {
                         </select>
                     </div>
 
-
                     <div>
                         <label><b>Año a pagar:</b></label>
                         <select
@@ -243,37 +331,10 @@ function Registro_pagos() {
                             style={inputStyle}
                         >
                             <option value="">SELECCIONE UN AÑO</option>
-                            <option value="2000">2000</option>
-                            <option value="2001">2001</option>
-                            <option value="2002">2002</option>
-                            <option value="2003">2003</option>
-                            <option value="2004">2004</option>
-                            <option value="2005">2005</option>
-                            <option value="2006">2006</option>
-                            <option value="2007">2007</option>
-                            <option value="2008">2008</option>
-                            <option value="2009">2009</option>
-                            <option value="2010">2010</option>
-                            <option value="2011">2011</option>
-                            <option value="2012">2012</option>
-                            <option value="2013">2013</option>
-                            <option value="2014">2014</option>
-                            <option value="2015">2015</option>
-                            <option value="2016">2016</option>
-                            <option value="2017">2017</option>
-                            <option value="2018">2018</option>
-                            <option value="2019">2019</option>
-                            <option value="2020">2020</option>
-                            <option value="2021">2021</option>
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                            <option value="2029">2029</option>
-                            <option value="2030">2030</option>
+                            {[...Array(31)].map((_, i) => {
+                                const year = 2000 + i;
+                                return <option key={year} value={year}>{year}</option>;
+                            })}
                         </select>
                     </div>
 
@@ -286,41 +347,38 @@ function Registro_pagos() {
                             style={inputStyle}
                         >
                             <option value="">SELECCIONE UN MES</option>
-                            <option value="ENERO">ENERO</option>
-                            <option value="FEBRERO">FEBRERO</option>
-                            <option value="MARZO">MARZO</option>
-                            <option value="ABRIL">ABRIL</option>
-                            <option value="MAYO">MAYO</option>
-                            <option value="JUNIO">JUNIO</option>
-                            <option value="JULIO">JULIO</option>
-                            <option value="AGOSTO">AGOSTO</option>
-                            <option value="SEPTIEMBRE">SEPTIEMBRE</option>
-                            <option value="OCTUBRE">OCTUBRE</option>
-                            <option value="NOVIEMBRE">NOVIEMBRE</option>
-                            <option value="DICIEMBRE">DICIEMBRE</option>
+                            {["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"].map(mes => (
+                                <option key={mes} value={mes}>{mes}</option>
+                            ))}
                         </select>
                     </div>
 
                     <div>
                         <label><b>Monto a Pagar:</b></label>
                         <input
-                            type="NUMBER"
+                            type="number"
                             placeholder="INGRESA EL MONTO TOTAL A PAGAR"
                             value={monto_pago}
                             onChange={(e) => setMonto_pago(e.target.value)}
                             style={inputStyle}
                         />
                     </div>
+
                     <div>
                         <label><b>Método de Pago:</b></label>
-                        <input
-                            type="text"
-                            placeholder="INGRESA EL MÉTODO DE PAGO (EFECTIVO / TRANSFERENCIA)"
+                        <select
+                            required
                             value={metodo_pago}
                             onChange={(e) => setMetodo_pago(e.target.value)}
                             style={inputStyle}
-                        />
+                        >
+                            <option value="">SELECCIONE UN MÉTODO</option>
+                            {["EFECTIVO", "TRANSFERENCIA", "TARJETA", "CONDONACIÓN"].map(mes => (
+                                <option key={mes} value={mes}>{mes}</option>
+                            ))}
+                        </select>
                     </div>
+
                     <div>
                         <label><b>Observaciones:</b></label>
                         <input
@@ -332,9 +390,6 @@ function Registro_pagos() {
                         />
                     </div>
 
-
-
-
                     <button type="submit" style={buttonStyle}>Registrar Pago</button>
                 </form>
             </div>
@@ -342,6 +397,7 @@ function Registro_pagos() {
     )
 }
 export default withAuthRole(Registro_pagos, ['admin'])
+
 // 🎨 Estilos reutilizables
 const inputStyle = {
     width: '100%',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import withAuthRole from '../../components/withAuthRole';
+import { jsPDF } from 'jspdf';
 
 function RegistroAportacionVoluntaria() {
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState('');
@@ -11,9 +12,13 @@ function RegistroAportacionVoluntaria() {
   const [busquedaUsuario, setBusquedaUsuario] = useState('');
   const [usuarios, setUsuarios] = useState([]);
   const [contratos, setContratos] = useState([]);
+  const [num_contrato, setNum_contrato] = useState('');
   const [lastUsuarioConsultado, setLastUsuarioConsultado] = useState(null);
   const [fechaAportacion, setFechaAportacion] = useState('');
 
+  const [contrato, setContrato] = useState([]);
+
+  const logoUrl = '/logoagua.png';
 
   // Obtener fecha local
   const getFechaLocal = () => {
@@ -54,12 +59,12 @@ function RegistroAportacionVoluntaria() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (!data.error) setContratos(data);
-        else setContratos([]);
+        if (!data.error) setContrato(data);
+        else setContrato([]);
       })
       .catch((err) => {
         console.error('Error al obtener contratos:', err);
-        setContratos([]);
+        setContrato([]);
       });
   }, [usuarioSeleccionado, lastUsuarioConsultado]);
 
@@ -73,7 +78,7 @@ function RegistroAportacionVoluntaria() {
     const payload = {
       id_usuario: usuarioSeleccionado,
       id_contrato: contratoSeleccionado,
-      fecha_aportacion:fechaAportacion,
+      fecha_aportacion: fechaAportacion,
       monto,
       metodo,
       observaciones,
@@ -97,18 +102,103 @@ function RegistroAportacionVoluntaria() {
 
       Swal.fire({ icon: 'success', title: '¡Registro exitoso!', text: 'La aportación voluntaria ha sido registrada.' });
 
+      generarPDF({
+        usuario: usuarios.find(u => String(u.id_usuario) === String(usuarioSeleccionado))?.Contratante || '',
+        num_contrato,
+        fechaAportacion,
+        monto,
+        metodo,
+        observaciones,
+        fecha_registro: getFechaLocal(),
+      });
       // Limpiar formulario
       setUsuarioSeleccionado('');
       setContratoSeleccionado('');
       setMonto('');
       setMetodo('');
+      setNum_contrato('');
       setObservaciones('');
       setBusquedaUsuario('');
       setContratos([]);
+      setFechaAportacion('')
     } catch (error) {
       Swal.fire({ icon: 'error', title: '¡Error!', text: error.message });
     }
   };
+
+  function generarPDF(info) {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // 👉 Logo y encabezado
+    const logoSize = 30;
+    doc.addImage(logoUrl, 'PNG', 15, 10, logoSize, logoSize);
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Comité del Agua Potable', pageWidth / 2, 20, { align: 'center' });
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('San Gaspar Tlahuelilpan, Metepec, Estado de México', pageWidth / 2, 28, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(`Fecha de expedición: ${info.fecha_registro}`, pageWidth - 15, 35, { align: 'right' });
+
+    // 👉 Título del recibo
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RECIBO DE PAGO', pageWidth / 2, 50, { align: 'center' });
+
+    // 👉 Cuerpo del recibo
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`CONCEPTO: APORTACIÓN VOLUNTARIA`, pageWidth - 15, 58, { align: 'right' });
+    const startY = 65;
+    const lineHeight = 10;
+    const fields = [
+      [`Nombre del Contratante`, info.usuario],
+      [`Número de Contrato`, info.num_contrato],
+      [`Fecha de Aportación`, info.fechaAportacion],
+      [`Monto Pagado`, `$${parseFloat(info.monto).toFixed(2)}`],
+      [`Método de Pago`, info.metodo],
+      [`Observaciones`, info.observaciones || 'Ninguna'],
+    ];
+
+    fields.forEach(([label, value], i) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${label}:`, 30, startY + i * lineHeight);
+
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${value}`, 90, startY + i * lineHeight);
+    });
+
+    // 👉 Línea de separación
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.3);
+    doc.line(15, startY + fields.length * lineHeight + 10, pageWidth - 15, startY + fields.length * lineHeight + 10);
+
+    // 👉 Aviso / nota legal
+    const footerY = startY + fields.length * lineHeight + 25;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.text(
+      'Este recibo certifica que el pago por concepto de aportación voluntaria ha sido realizado correctamente \n' +
+      'ante el Comité del Agua Potable. Guarde este documento como comprobante oficial.\n\n' +
+      'Aviso de privacidad: Los datos personales aquí registrados serán utilizados únicamente para fines administrativos\n' +
+      'y de control interno del sistema de agua de San Gaspar Tlahuelilpan, Metepec, Edo. de México.',
+      pageWidth / 2,
+      footerY,
+      { align: 'center' }
+    );
+
+    doc.save(`ReciboPago_${info.num_contrato}_${info.anio_pago}.pdf`)
+    // 👉 Abrir PDF en nueva pestaña
+    const pdfBlobUrl = doc.output('bloburl');
+    window.open(pdfBlobUrl, '_blank');
+  }
+
 
   return (
     <div style={formContainerStyle}>
@@ -152,12 +242,19 @@ function RegistroAportacionVoluntaria() {
           <select
             required
             value={contratoSeleccionado}
-            onChange={(e) => setContratoSeleccionado(e.target.value)}
+            onChange={(e) => {
+              const selectedId = e.target.value;
+              setContratoSeleccionado(selectedId);
+              const contratoEncontrado = contrato.find(c => c.id_contrato == selectedId);
+              setNum_contrato(contratoEncontrado ? contratoEncontrado.num_contrato : '');
+            }}
             style={inputStyle}
           >
             <option value="">SELECCIONE UN CONTRATO</option>
-            {contratos.map(c => (
-              <option key={c.id_contrato} value={c.id_contrato}>{c.num_contrato}</option>
+            {contrato.map((contrato) => (
+              <option key={contrato.id_contrato} value={contrato.id_contrato}>
+                {contrato.num_contrato}
+              </option>
             ))}
           </select>
         </div>
@@ -187,14 +284,17 @@ function RegistroAportacionVoluntaria() {
 
         <div>
           <label><b>Método de Pago:</b></label>
-          <input
-            type="text"
-            placeholder="Ej. EFECTIVO, TRANSFERENCIA"
+          <select
+            required
             value={metodo}
             onChange={(e) => setMetodo(e.target.value)}
             style={inputStyle}
-            required
-          />
+          >
+            <option value="">SELECCIONE UN MÉTODO</option>
+            {["EFECTIVO", "TRANSFERENCIA", "TARJETA"].map(mes => (
+              <option key={mes} value={mes}>{mes}</option>
+            ))}
+          </select>
         </div>
 
         <div>

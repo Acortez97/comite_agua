@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Select } from '@mui/material';
 import withAuthRole from '../../components/withAuthRole'
+import { jsPDF } from 'jspdf';
 
 
 function Registro_pagos() {
@@ -16,6 +17,8 @@ function Registro_pagos() {
     const [monto_pago, setMonto_pago] = useState('');
     const [metodo_pago, setMetodo_pago] = useState('');
     const [observaciones, setObservaciones] = useState('');
+    // Si tienes un logo local o url
+    const logoUrl = '/logoagua.png'; // ejemplo, ajusta al path correcto
 
     const [usuarios, setUsuarios] = useState([]);
     const [contrato, setContrato] = useState([]);
@@ -89,6 +92,7 @@ function Registro_pagos() {
     }, [usuarioSeleccionado, lastUsuarioConsultado]);
 
     function borrar() {
+        setBusquedaUsuario('');
         setUsuarioSeleccionado('');
         setContratoSeleccionado('');
         setNum_contrato('');
@@ -131,9 +135,119 @@ function Registro_pagos() {
         if (!response.ok) { throw new Error(results?.error || 'Error al insertar'); }
         Swal.fire({ icon: 'success', title: '¡Registro exitoso!', text: 'Los datos se han guardado correctamente.' })
 
+        generarPDF({
+            usuario: usuarios.find(u => String(u.id_usuario) === String(usuarioSeleccionado))?.Contratante || '',
+            num_contrato,
+            anio_pago,
+            mes_pago,
+            monto_pago,
+            metodo_pago,
+            observaciones,
+            fecha_registro: getFechaLocal(),
+        });
         // Limpiar y recargar
         borrar();
     };
+
+    // Función para generar el PDF
+    /*function generarPDF(info) {
+        const doc = new jsPDF();
+        doc.addImage(logoUrl, 'PNG', 15, 10, 30, 30);
+        doc.setFontSize(22);
+        doc.text('Recibo de Pago', 105, 20, null, null, 'center');
+
+        doc.setFontSize(12);
+        doc.text(`Nombre: ${info.usuario}`, 20, 50);
+        doc.text(`Número de Contrato: ${info.num_contrato}`, 20, 60);
+        doc.text(`Año de Pago: ${info.anio_pago}`, 20, 70);
+        doc.text(`Mes de Pago: ${info.mes_pago}`, 20, 80);
+        doc.text(`Monto Pagado: $${info.monto_pago}`, 20, 90);
+        doc.text(`Método de Pago: ${info.metodo_pago}`, 20, 100);
+        doc.text(`Observaciones: ${info.observaciones || 'Ninguna'}`, 20, 110);
+        doc.text(`Fecha de Registro: ${info.fecha_registro}`, 20, 120);
+
+        // Línea decorativa
+        doc.setLineWidth(0.5);
+        doc.line(15, 135, 195, 135);
+
+        // En vez de descargar, abrir en una nueva pestaña
+        doc.save(`ReciboPago_${info.num_contrato}_${info.anio_pago}.pdf`)
+        window.open(doc.output('bloburl'), '_blank');
+    }*/
+    function generarPDF(info) {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // 👉 Logo y encabezado
+    const logoSize = 30;
+    doc.addImage(logoUrl, 'PNG', 15, 10, logoSize, logoSize);
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Comité del Agua Potable', pageWidth / 2, 20, { align: 'center' });
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('San Gaspar Tlahuelilpan, Metepec, Estado de México', pageWidth / 2, 28, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(`Fecha de expedición: ${info.fecha_registro}`, pageWidth - 15, 35, { align: 'right' });
+
+    // 👉 Título del recibo
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RECIBO DE PAGO', pageWidth / 2, 50, { align: 'center' });
+
+    // 👉 Cuerpo del recibo
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+
+    const startY = 65;
+    const lineHeight = 10;
+    const fields = [
+        [`Nombre del Contratante`, info.usuario],
+        [`Número de Contrato`, info.num_contrato],
+        [`Año de Pago`, info.anio_pago],
+        [`Mes de Pago`, info.mes_pago],
+        [`Monto Pagado`, `$${parseFloat(info.monto_pago).toFixed(2)}`],
+        [`Método de Pago`, info.metodo_pago],
+        [`Observaciones`, info.observaciones || 'Ninguna'],
+    ];
+
+    fields.forEach(([label, value], i) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${label}:`, 30, startY + i * lineHeight);
+
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${value}`, 90, startY + i * lineHeight);
+    });
+
+    // 👉 Línea de separación
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.3);
+    doc.line(15, startY + fields.length * lineHeight + 10, pageWidth - 15, startY + fields.length * lineHeight + 10);
+
+    // 👉 Aviso / nota legal
+    const footerY = startY + fields.length * lineHeight + 25;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.text(
+        'Este recibo certifica que el pago ha sido realizado correctamente ante el Comité del Agua Potable.\n' +
+        'Guarde este documento como comprobante oficial.\n\n' +
+        'Aviso de privacidad: Los datos personales aquí registrados serán utilizados únicamente para fines administrativos\n' +
+        'y de control interno del sistema de agua de San Gaspar Tlahuelilpan, Metepec, Edo. de México.',
+        pageWidth / 2,
+        footerY,
+        { align: 'center' }
+    );
+
+     doc.save(`ReciboPago_${info.num_contrato}_${info.anio_pago}.pdf`)
+    // 👉 Abrir PDF en nueva pestaña
+    const pdfBlobUrl = doc.output('bloburl');
+    window.open(pdfBlobUrl, '_blank');
+}
+
 
     const [busquedaUsuario, setBusquedaUsuario] = useState('');
 

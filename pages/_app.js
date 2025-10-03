@@ -10,7 +10,7 @@ function MyApp({ Component, pageProps }) {
       <Head>
         <title>COMITE DEL AGUA</title>
         <meta name="description" content="Administración del sistema de agua." />
-        <link rel="icon" href="/agua.png" />
+        <link rel="icon" href="/logoagua.ico" />
       </Head>
       <AuthProvider>
         <Layout>

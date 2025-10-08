@@ -45,11 +45,6 @@ export default async function handler(req, res) {
                     fecha_creacion // ya viene del cliente
                 } = usuario;
 
-                // Validar campos mínimos (puedes extenderlo)
-                if (!Nombre || !Apellido_pat || !domicilio ) {
-                    throw new Error(`Faltan campos obligatorios en usuario: ${JSON.stringify(usuario)}`);
-                }
-
                 const sql = `
                     INSERT INTO usuarios 
                     (Nombre, Apellido_pat, Apellido_mat, num_celular, correo, domicilio, fecha_creacion, status)

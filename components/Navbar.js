@@ -142,6 +142,9 @@ export default function Navbar() {
                   </Link>
                   {user.rol === "admin" && (
                     <>
+                    <Link href="/Usuarios/ver_userAdmin" onClick={closeAll}>
+                        Administrar Usuarios
+                      </Link>
                       <Link href="/Usuarios/Registro_usuarios" onClick={closeAll}>
                         Registrar Usuarios
                       </Link>

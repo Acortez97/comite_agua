@@ -173,7 +173,6 @@ function Registro_usuarios() {
                         style={inputStyle}
                     />
                 </div>
-
                 <div>
                     <label>
                         <b>Apellido Paterno:</b>
@@ -186,7 +185,6 @@ function Registro_usuarios() {
                         style={inputStyle}
                     />
                 </div>
-
                 <div>
                     <label>
                         <b>Apellido Materno:</b>

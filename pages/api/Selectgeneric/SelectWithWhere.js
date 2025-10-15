@@ -26,7 +26,7 @@ export default function handler(req, res) {
             return;
         }
 
-        const sql = `SELECT ${select} FROM ${table} WHERE ${column} = ?`;
+        const sql = `SELECT ${select} FROM ${table} WHERE ${column} = ? and status=1`;
 
         pool.query(sql, [id], (err, result) => {
             if (err) {

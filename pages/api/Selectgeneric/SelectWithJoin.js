@@ -27,7 +27,7 @@ export default function handler(req, res) {
 
   // Construye la consulta SQL dinámica con joins permitidos
   let sql = `SELECT ${select} FROM ${table}`;
-  if (where) sql += ` WHERE ${where}`;
+  if (where) sql += ` WHERE ${where} and status=1`;
   if (orderBy) sql += ` ORDER BY ${orderBy}`;
 
   pool.getConnection((err, connection) => {

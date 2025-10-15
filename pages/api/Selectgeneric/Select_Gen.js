@@ -26,7 +26,7 @@ export default function handler(req, res) {
         return res.status(400).json({ error: 'Faltan parámetros select o table' });
     }
 
-    const sql = `SELECT ${select} FROM ??`;
+    const sql = `SELECT ${select} FROM ?? where status = 1`;
     const values = [table];
 
     pool.getConnection((err, connection) => {

@@ -119,7 +119,7 @@ export default function VerAportaciones() {
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [rows, setRows] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -198,7 +198,7 @@ export default function VerAportaciones() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         select: `av.fecha_aportacion, av.monto AS monto_pago, av.metodo AS metodo_pago, av.observaciones,  CONCAT_WS(" ", u.Nombre, u.Apellido_pat, u.Apellido_mat) AS Contratante,  c.num_contrato AS Contrato `,
-        table: `aportacion_voluntaria av LEFT JOIN usuarios u ON av.id_usuario = u.id_usuario LEFT JOIN contratos c ON av.id_contrato = c.id_contrato `,
+        table: `aportacion_voluntaria av LEFT JOIN usuarios u ON av.id_usuario = u.id_usuario LEFT JOIN contratos c ON av.id_contrato = c.id_contrato`,
       })
     })
       .then((res) => res.json())

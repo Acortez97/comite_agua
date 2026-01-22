@@ -142,6 +142,9 @@ export default function Navbar() {
                   </Link>
                   {user.rol === "admin" && (
                     <>
+                    <Link href="/Usuarios/ver_userAdmin" onClick={closeAll}>
+                        Administrar Usuarios
+                      </Link>
                       <Link href="/Usuarios/Registro_usuarios" onClick={closeAll}>
                         Registrar Usuarios
                       </Link>
@@ -209,6 +212,9 @@ export default function Navbar() {
                   <Link href="/Pagos/Ver_aportaciones" onClick={closeAll}>
                         Ver Aportaciones Voluntarias
                       </Link>
+                      <Link href="/Pagos/Ver_salidas" onClick={closeAll}>
+                        Ver Salidas
+                      </Link>
                   {user.rol === "admin" && (
                     <>
                       <Link href="/Pagos/Registro_pagos" onClick={closeAll}>
@@ -216,6 +222,9 @@ export default function Navbar() {
                       </Link>
                       <Link href="/Pagos/Registro_Avoluntarias" onClick={closeAll}>
                         Registrar Aportaciones extras
+                      </Link>
+                      <Link href="/Pagos/Registro_Salidas" onClick={closeAll}>
+                        Registrar Salidas
                       </Link>
                       
                     </>

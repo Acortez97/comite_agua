@@ -120,7 +120,7 @@ export default function Ver_usuarios() {
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [rows, setRows] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -304,7 +304,7 @@ export default function Ver_usuarios() {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[25, 50, 100]}
           component="div"
           count={rows.length}
           rowsPerPage={rowsPerPage}

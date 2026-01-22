@@ -33,10 +33,6 @@ function Registro_usuarios() {
             status: 1,
         };
 
-        if (!payload.Nombre) {
-            Swal.fire({ icon: 'error', title: '¡Error!', text: 'El Nombre del USUARIO es OBLIGATORIO.' });
-            return;
-        }
         const data = { table: 'usuarios', data: { ...payload, fecha_creacion: getFechaLocal() } };
         const response = await fetch('/api/InsertGeneral/insert', {
             method: 'POST',
@@ -99,7 +95,7 @@ function Registro_usuarios() {
                         return;
                     }
 
-                    const camposRequeridos = ['Nombre', 'Apellido_pat',  'domicilio'];
+                    const camposRequeridos = ['Nombre'];
                     const faltantes = camposRequeridos.filter(campo => !(campo in dataCSV[0]));
                     if (faltantes.length) {
                         Swal.fire('Error', `Campos faltantes en CSV: ${faltantes.join(', ')}`, 'error');
@@ -177,7 +173,6 @@ function Registro_usuarios() {
                         style={inputStyle}
                     />
                 </div>
-
                 <div>
                     <label>
                         <b>Apellido Paterno:</b>
@@ -190,7 +185,6 @@ function Registro_usuarios() {
                         style={inputStyle}
                     />
                 </div>
-
                 <div>
                     <label>
                         <b>Apellido Materno:</b>
